@@ -1,0 +1,39 @@
+---
+
+- name: Update the /etc/hosts file with node name
+  become: yes
+  lineinfile:
+    path: "/etc/hosts"
+    regexp: "{{ hostvars[item]['ansible_env'].SSH_CONNECTION.split(' ')[2] }}\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+    line: "{{ hostvars[item]['ansible_env'].SSH_CONNECTION.split(' ')[2] }}\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+    state: present
+    backup: yes
+  when: ansible_hostname != "{{ item }}" or ansible_hostname == "{{ item }}"
+  with_items: "{{groups['rabbitmq_cluster']}}"
+
+
+- name: Install Erlang (RabbitMQ maintained)
+  become: yes
+  yum:
+    name: "{{ erlang_download_url }}"
+    state: present
+
+# For more on installation see: https://www.rabbitmq.com/install-rpm.html
+- name: Install RabbitMQ Server
+  become: yes
+  yum: 
+    name: "{{ rabbitmq_download_url }}"
+    state: present
+
+- name: Set RabbitMQ server Limits
+  become: yes
+  copy:
+    src: limits.conf
+    dest: /etc/systemd/system/rabbitmq-server.service.d/
+
+
+
+
+
+
+

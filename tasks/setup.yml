@@ -1,0 +1,40 @@
+---
+
+- name: set erlang cookie
+  become: yes
+  template:
+    src: erlang.cookie.j2
+    dest: /var/lib/rabbitmq/.erlang.cookie
+
+- name: remove guest user
+  become: yes
+  rabbitmq_user:
+    user: guest
+    state: absent
+
+# rc 70: user already exists
+- name: create new user
+  become: yes
+  shell: rabbitmqctl add_user {[ rabbit_mq_user ]} {{ rabbitmq_user_pass }}
+  register: res
+  failed_when: res.rc != 70 and res.rc != 0
+  changed_when: res.rc != 70
+
+- name: list permissions for new user
+  become: yes
+  shell: rabbitmqctl list_permissions
+  register: list_permissions
+  changed_when: false
+
+- name: set permissions on / vhost
+  become: yes
+  shell: rabbitmqctl set_permissions {{ rabbitmq_user }} ".*" ".*" ".*"
+  when: list_permissions.stdout.find("{{ rabbit_mq_user }}") == -1
+
+- name: enable rabbitmq plugins
+  become: yes
+  rabbitmq_plugin: 
+    names: rabbitmq_management,rabbitmq_tracing,rabbitmq_management_agent 
+    state: enabled
+  notify:
+  - Reload systemctl

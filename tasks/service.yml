@@ -1,0 +1,8 @@
+---
+
+- name: Start rabbitmq-server
+  become: yes
+  systemd:
+    name: rabbitmq-server
+    state: started
+    enabled: yes

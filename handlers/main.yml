@@ -1,0 +1,9 @@
+---
+
+- name: Reload systemctl
+  become: yes
+  systemd:
+    name: rabbitmq-server
+    state: started
+    enabled: yes
+    daemon_reload: yes

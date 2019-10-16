@@ -1,0 +1,9 @@
+---
+
+- include: install.yml
+- include: service.yml
+- include: setup.yml
+- include_tasks: cluster.yml
+  when: inventory_hostname != "{{ rabbitmq_master }}"
+- include: queue.yml
+
