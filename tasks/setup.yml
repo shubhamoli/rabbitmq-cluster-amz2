@@ -12,10 +12,12 @@
     user: guest
     state: absent
 
-# rc 70: user already exists
+# 1. rc 70: user already exists
+# 2. Not using rabbitmq_user module of ansible as it has some issue
+#    see: https://github.com/ansible/ansible/issues/49978
 - name: create new user
   become: yes
-  shell: rabbitmqctl add_user {[ rabbit_mq_user ]} {{ rabbitmq_user_pass }}
+  shell: rabbitmqctl add_user {[ rabbitmq_user ]} {{ rabbitmq_user_pass }}
   register: res
   failed_when: res.rc != 70 and res.rc != 0
   changed_when: res.rc != 70
@@ -29,7 +31,7 @@
 - name: set permissions on / vhost
   become: yes
   shell: rabbitmqctl set_permissions {{ rabbitmq_user }} ".*" ".*" ".*"
-  when: list_permissions.stdout.find("{{ rabbit_mq_user }}") == -1
+  when: list_permissions.stdout.find("{{ rabbitmq_user }}") == -1
 
 - name: enable rabbitmq plugins
   become: yes
